@@ -4,10 +4,12 @@ import { TextInput, Button, Text, HelperText, Snackbar } from 'react-native-pape
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { authService } from '../services/api';
 import * as EmailValidator from 'email-validator';
+import { useAuth } from '../contexts/AuthContext';
 
 type RootStackParamList = {
   Register: undefined;
   Login: undefined;
+  Welcome: undefined;
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
@@ -20,6 +22,7 @@ interface ValidationErrors {
 }
 
 export default function RegisterScreen({ navigation }: Props) {
+  const { signIn } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -82,14 +85,17 @@ export default function RegisterScreen({ navigation }: Props) {
       setLoading(true);
       setError('');
 
-      await authService.register({
+      const response = await authService.register({
         name: formData.name.trim(),
         email: formData.email.toLowerCase(),
         password: formData.password,
       });
 
-      // Đăng ký thành công, chuyển đến màn hình đăng nhập
-      navigation.navigate('Login');
+      // Save auth data
+      await signIn(response.token, response.user);
+
+      // Navigate to Welcome screen
+      navigation.replace('Welcome');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Đã có lỗi xảy ra';
       setError(errorMessage);
@@ -219,7 +225,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#666666',
-    textAlign: 'center',
   },
   form: {
     flex: 1,

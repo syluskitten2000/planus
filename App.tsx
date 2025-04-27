@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
+import { AuthProvider } from './src/contexts/AuthContext';
 
 // Screens
 import WelcomeScreen from './src/screens/WelcomeScreen';
@@ -54,69 +55,71 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
-    <PaperProvider theme={theme}>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        <Stack.Navigator
-          initialRouteName="Welcome"
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: theme.colors.background,
-            },
-            headerTintColor: theme.colors.text,
-            headerShadowVisible: false,
-          }}
-        >
-          <Stack.Screen 
-            name="Welcome" 
-            component={WelcomeScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen 
-            name="Login" 
-            component={LoginScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen 
-            name="Register" 
-            component={RegisterScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen 
-            name="ForgotPassword" 
-            component={ForgotPasswordScreen}
-            options={{ 
-              title: 'Quên mật khẩu',
-              headerShown: true,
+    <AuthProvider>
+      <PaperProvider theme={theme}>
+        <NavigationContainer>
+          <StatusBar style="auto" />
+          <Stack.Navigator
+            initialRouteName="Welcome"
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: theme.colors.background,
+              },
+              headerTintColor: theme.colors.text,
+              headerShadowVisible: false,
             }}
-          />
-          <Stack.Screen 
-            name="Mood" 
-            component={MoodScreen}
-            options={{ title: 'Chọn không khí' }}
-          />
-          <Stack.Screen 
-            name="Preferences" 
-            component={PreferencesScreen}
-            options={{ title: 'Tùy chọn' }}
-          />
-          <Stack.Screen 
-            name="Schedule" 
-            component={ScheduleScreen}
-            options={{ title: 'Lịch trình' }}
-          />
-          <Stack.Screen 
-            name="Confirmation" 
-            component={ConfirmationScreen}
-            options={{ title: 'Xác nhận' }}
-          />
-          <Stack.Screen 
-            name="History" 
-            component={HistoryScreen}
-            options={{ title: 'Lịch sử' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </PaperProvider>
+          >
+            <Stack.Screen 
+              name="Welcome" 
+              component={WelcomeScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="Login" 
+              component={LoginScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="Register" 
+              component={RegisterScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="ForgotPassword" 
+              component={ForgotPasswordScreen}
+              options={{ 
+                title: 'Quên mật khẩu',
+                headerShown: true,
+              }}
+            />
+            <Stack.Screen 
+              name="Mood" 
+              component={MoodScreen}
+              options={{ title: 'Chọn không khí' }}
+            />
+            <Stack.Screen 
+              name="Preferences" 
+              component={PreferencesScreen}
+              options={{ title: 'Tùy chọn' }}
+            />
+            <Stack.Screen 
+              name="Schedule" 
+              component={ScheduleScreen}
+              options={{ title: 'Lịch trình' }}
+            />
+            <Stack.Screen 
+              name="Confirmation" 
+              component={ConfirmationScreen}
+              options={{ title: 'Xác nhận' }}
+            />
+            <Stack.Screen 
+              name="History" 
+              component={HistoryScreen}
+              options={{ title: 'Lịch sử' }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </PaperProvider>
+    </AuthProvider>
   );
 } 

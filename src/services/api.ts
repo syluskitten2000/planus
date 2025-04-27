@@ -1,22 +1,20 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Thay đổi localhost thành IP máy tính của bạn
-const API_URL = 'http://192.168.1.5:5000/api';
+import { API_CONFIG, AUTH_STORAGE_KEY } from '../config/api';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_CONFIG.BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // timeout sau 10s
+  timeout: API_CONFIG.TIMEOUT,
 });
 
 // Add token to requests if it exists
 api.interceptors.request.use(async (config) => {
   try {
-    const token = await AsyncStorage.getItem('auth_token');
+    const token = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,16 +29,44 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    console.error('API Error:', error.response?.data || error.message);
-    
-    if (error.response?.status === 401) {
-      try {
-        await AsyncStorage.removeItem('auth_token');
-      } catch (e) {
-        console.error('Error removing token:', e);
+    if (!error.response) {
+      // Network error or CORS issue
+      if (__DEV__) {
+        console.error('API Error:', error);
+        throw new Error(
+          'Không thể kết nối đến máy chủ. Vui lòng kiểm tra:\n' +
+          '1. Server đang chạy tại http://localhost:5000\n' +
+          '2. CORS được cấu hình đúng trên server\n' +
+          '3. Kết nối mạng của bạn'
+        );
+      } else {
+        throw new Error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.');
       }
     }
-    return Promise.reject(error);
+
+    const { status, data } = error.response;
+
+    switch (status) {
+      case 400:
+        throw new Error(data?.message || 'Dữ liệu không hợp lệ');
+      case 401:
+        // Remove token on auth error
+        await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+        throw new Error(data?.message || 'Phiên đăng nhập đã hết hạn');
+      case 403:
+        throw new Error(data?.message || 'Bạn không có quyền thực hiện thao tác này');
+      case 404:
+        throw new Error(data?.message || 'Không tìm thấy tài nguyên');
+      case 409:
+        throw new Error(data?.message || 'Dữ liệu đã tồn tại');
+      case 500:
+        throw new Error('Lỗi máy chủ. Vui lòng thử lại sau.');
+      default:
+        if (__DEV__) {
+          console.error('API Error:', { status, data });
+        }
+        throw new Error(data?.message || 'Đã có lỗi xảy ra');
+    }
   }
 );
 
@@ -68,14 +94,16 @@ export const authService = {
   async login(data: LoginData): Promise<AuthResponse> {
     try {
       const response = await api.post<AuthResponse>('/auth/login', data);
-      const { token } = response.data;
-      if (token) {
-        await AsyncStorage.setItem('auth_token', token);
-      }
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Đăng nhập thất bại');
+        if (!error.response) {
+          throw new Error('Không thể kết nối đến máy chủ');
+        }
+        if (__DEV__) {
+          console.error('Login error:', error.response.data);
+        }
+        throw new Error(error.response.data?.message || 'Đăng nhập thất bại');
       }
       throw error;
     }
@@ -83,40 +111,20 @@ export const authService = {
 
   async register(data: RegisterData): Promise<AuthResponse> {
     try {
-      console.log('Sending registration request:', {
-        ...data,
-        password: '[HIDDEN]'
-      });
-      
       const response = await api.post<AuthResponse>('/auth/register', data);
-      console.log('Registration response:', {
-        status: response.status,
-        data: {
-          ...response.data,
-          token: response.data.token ? '[PRESENT]' : '[MISSING]'
-        }
-      });
-
-      const { token } = response.data;
-      if (token) {
-        await AsyncStorage.setItem('auth_token', token);
-      } else {
-        console.warn('No token received in registration response');
-      }
       return response.data;
     } catch (error) {
-      console.error('Registration error:', {
-        isAxiosError: axios.isAxiosError(error),
-        status: axios.isAxiosError(error) ? error.response?.status : undefined,
-        data: axios.isAxiosError(error) ? error.response?.data : undefined,
-        message: error instanceof Error ? error.message : String(error)
-      });
-
       if (axios.isAxiosError(error)) {
-        throw new Error(
-          error.response?.data?.message || 
-          `Đăng ký thất bại: ${error.response?.status === 0 ? 'Không thể kết nối đến server' : error.message}`
-        );
+        if (!error.response) {
+          throw new Error('Không thể kết nối đến máy chủ');
+        }
+        if (__DEV__) {
+          console.error('Registration error:', error.response.data);
+        }
+        if (error.response.status === 409) {
+          throw new Error('Email đã được sử dụng');
+        }
+        throw new Error(error.response.data?.message || 'Đăng ký thất bại');
       }
       throw error;
     }
@@ -127,7 +135,13 @@ export const authService = {
       await api.post('/auth/forgot-password', { email });
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Không thể gửi email khôi phục mật khẩu');
+        if (!error.response) {
+          throw new Error('Không thể kết nối đến máy chủ');
+        }
+        if (__DEV__) {
+          console.error('Forgot password error:', error.response.data);
+        }
+        throw new Error(error.response.data?.message || 'Không thể gửi email khôi phục mật khẩu');
       }
       throw error;
     }
@@ -138,28 +152,15 @@ export const authService = {
       await api.post('/auth/reset-password', { token, newPassword });
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Không thể đặt lại mật khẩu');
+        if (!error.response) {
+          throw new Error('Không thể kết nối đến máy chủ');
+        }
+        if (__DEV__) {
+          console.error('Reset password error:', error.response.data);
+        }
+        throw new Error(error.response.data?.message || 'Không thể đặt lại mật khẩu');
       }
       throw error;
-    }
-  },
-
-  async logout(): Promise<void> {
-    try {
-      await AsyncStorage.removeItem('auth_token');
-    } catch (error) {
-      console.error('Error during logout:', error);
-      throw new Error('Không thể đăng xuất');
-    }
-  },
-
-  async isAuthenticated(): Promise<boolean> {
-    try {
-      const token = await AsyncStorage.getItem('auth_token');
-      return !!token;
-    } catch (error) {
-      console.error('Error checking authentication:', error);
-      return false;
     }
   },
 }; 

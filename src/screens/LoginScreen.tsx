@@ -4,6 +4,7 @@ import { TextInput, Button, Text, HelperText, Snackbar } from 'react-native-pape
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { authService } from '../services/api';
 import * as EmailValidator from 'email-validator';
+import { useAuth } from '../contexts/AuthContext';
 
 type RootStackParamList = {
   Login: undefined;
@@ -15,6 +16,7 @@ type RootStackParamList = {
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -49,7 +51,12 @@ export default function LoginScreen({ navigation }: Props) {
       }
 
       // Call API
-      await authService.login({ email, password });
+      const response = await authService.login({ email, password });
+      
+      // Save auth data
+      await signIn(response.token, response.user);
+
+      // Navigate to Welcome screen
       navigation.replace('Welcome');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
