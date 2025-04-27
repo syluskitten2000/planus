@@ -856,12 +856,9 @@ const locations: Locations = {
 
 const generateSchedule = (
   selectedDistrict: string,
-  preferences: {
-    cafes: boolean;
-    restaurants: boolean;
-    entertainment: boolean;
-    shopping: boolean;
-  }
+  moodType: string,
+  budget: string,
+  timeSlot: string
 ): ScheduleItem[] => {
   const districtLocations = locations[selectedDistrict as keyof typeof locations];
   if (!districtLocations) {
@@ -870,138 +867,236 @@ const generateSchedule = (
   }
 
   const schedule: ScheduleItem[] = [];
+  
+  // Helper function to filter locations by budget
+  const filterByBudget = (location: LocationDetail): boolean => {
+    const priceStr = location.priceRange;
+    if (priceStr === 'Miễn phí' || priceStr === 'Tùy hoạt động' || priceStr === 'Theo sự kiện') return true;
+    
+    const prices = priceStr.match(/\d+\.?\d*/g);
+    if (!prices) return true;
+    
+    const avgPrice = prices.reduce((a, b) => Number(b.replace('.', '')) + a, 0) / prices.length;
+    
+    switch (budget) {
+      case 'low': return avgPrice <= 100000;
+      case 'medium': return avgPrice > 100000 && avgPrice <= 300000;
+      case 'high': return avgPrice > 300000;
+      default: return true;
+    }
+  };
 
-  // Morning activity (Cafe)
-  if (preferences.cafes && districtLocations.cafe.length > 0) {
-    const randomCafe = districtLocations.cafe[Math.floor(Math.random() * districtLocations.cafe.length)];
-    schedule.push({
-      time: '9:00 AM',
-      activity: 'Morning Coffee',
-      location: randomCafe,
-      type: 'cafe'
-    });
-  }
+  // Filter locations based on mood type
+  const filterByMood = (location: LocationDetail, type: string): boolean => {
+    switch (moodType) {
+      case 'romantic':
+        // Romantic places prefer cafes and restaurants with higher price ranges
+        return type === 'cafe' || type === 'restaurant';
+      case 'adventure':
+        // Adventure mood prefers entertainment and outdoor activities
+        return type === 'entertainment';
+      case 'relaxing':
+        // Relaxing mood prefers cafes and shopping
+        return type === 'cafe' || type === 'shopping';
+      case 'cultural':
+        // Cultural mood prefers entertainment venues and traditional restaurants
+        return type === 'entertainment' || type === 'restaurant';
+      default:
+        return true;
+    }
+  };
 
-  // Lunch (Restaurant)
-  if (preferences.restaurants && districtLocations.restaurant.length > 0) {
-    const randomRestaurant = districtLocations.restaurant[Math.floor(Math.random() * districtLocations.restaurant.length)];
-    schedule.push({
-      time: '12:00 PM',
-      activity: 'Lunch',
-      location: randomRestaurant,
-      type: 'restaurant'
-    });
-  }
+  // Generate schedule based on time slot
+  switch (timeSlot) {
+    case 'morning':
+      if (districtLocations.cafe.length > 0) {
+        const filteredCafes = districtLocations.cafe.filter(cafe => 
+          filterByBudget(cafe) && filterByMood(cafe, 'cafe')
+        );
+        if (filteredCafes.length > 0) {
+          schedule.push({
+            time: '8:00 AM',
+            activity: 'Morning Coffee',
+            location: filteredCafes[Math.floor(Math.random() * filteredCafes.length)],
+            type: 'cafe'
+          });
+        }
+      }
+      if (districtLocations.entertainment.length > 0) {
+        const filteredEntertainment = districtLocations.entertainment.filter(ent => 
+          filterByBudget(ent) && filterByMood(ent, 'entertainment')
+        );
+        if (filteredEntertainment.length > 0) {
+          schedule.push({
+            time: '10:00 AM',
+            activity: 'Morning Activity',
+            location: filteredEntertainment[Math.floor(Math.random() * filteredEntertainment.length)],
+            type: 'entertainment'
+          });
+        }
+      }
+      break;
 
-  // Afternoon activity (Entertainment)
-  if (preferences.entertainment && districtLocations.entertainment.length > 0) {
-    const randomEntertainment = districtLocations.entertainment[Math.floor(Math.random() * districtLocations.entertainment.length)];
-    schedule.push({
-      time: '2:00 PM',
-      activity: 'Afternoon Activity',
-      location: randomEntertainment,
-      type: 'entertainment'
-    });
-  }
+    case 'afternoon':
+      if (districtLocations.restaurant.length > 0) {
+        const filteredRestaurants = districtLocations.restaurant.filter(rest => 
+          filterByBudget(rest) && filterByMood(rest, 'restaurant')
+        );
+        if (filteredRestaurants.length > 0) {
+          schedule.push({
+            time: '12:00 PM',
+            activity: 'Lunch',
+            location: filteredRestaurants[Math.floor(Math.random() * filteredRestaurants.length)],
+            type: 'restaurant'
+          });
+        }
+      }
+      if (districtLocations.entertainment.length > 0) {
+        const filteredEntertainment = districtLocations.entertainment.filter(ent => 
+          filterByBudget(ent) && filterByMood(ent, 'entertainment')
+        );
+        if (filteredEntertainment.length > 0) {
+          schedule.push({
+            time: '2:00 PM',
+            activity: 'Afternoon Activity',
+            location: filteredEntertainment[Math.floor(Math.random() * filteredEntertainment.length)],
+            type: 'entertainment'
+          });
+        }
+      }
+      break;
 
-  // Shopping (if selected)
-  if (preferences.shopping && districtLocations.shopping.length > 0) {
-    const randomShopping = districtLocations.shopping[Math.floor(Math.random() * districtLocations.shopping.length)];
-    schedule.push({
-      time: '4:00 PM',
-      activity: 'Shopping',
-      location: randomShopping,
-      type: 'shopping'
-    });
-  }
+    case 'evening':
+      if (districtLocations.entertainment.length > 0) {
+        const filteredEntertainment = districtLocations.entertainment.filter(ent => 
+          filterByBudget(ent) && filterByMood(ent, 'entertainment')
+        );
+        if (filteredEntertainment.length > 0) {
+          schedule.push({
+            time: '5:00 PM',
+            activity: 'Evening Activity',
+            location: filteredEntertainment[Math.floor(Math.random() * filteredEntertainment.length)],
+            type: 'entertainment'
+          });
+        }
+      }
+      if (districtLocations.restaurant.length > 0) {
+        const filteredRestaurants = districtLocations.restaurant.filter(rest => 
+          filterByBudget(rest) && filterByMood(rest, 'restaurant')
+        );
+        if (filteredRestaurants.length > 0) {
+          schedule.push({
+            time: '7:00 PM',
+            activity: 'Dinner',
+            location: filteredRestaurants[Math.floor(Math.random() * filteredRestaurants.length)],
+            type: 'restaurant'
+          });
+        }
+      }
+      break;
 
-  // Dinner (Restaurant)
-  if (preferences.restaurants && districtLocations.restaurant.length > 0) {
-    const randomRestaurant = districtLocations.restaurant[Math.floor(Math.random() * districtLocations.restaurant.length)];
-    schedule.push({
-      time: '7:00 PM',
-      activity: 'Dinner',
-      location: randomRestaurant,
-      type: 'restaurant'
-    });
+    default:
+      // Full day schedule
+      if (districtLocations.cafe.length > 0) {
+        const filteredCafes = districtLocations.cafe.filter(cafe => 
+          filterByBudget(cafe) && filterByMood(cafe, 'cafe')
+        );
+        if (filteredCafes.length > 0) {
+          schedule.push({
+            time: '9:00 AM',
+            activity: 'Morning Coffee',
+            location: filteredCafes[Math.floor(Math.random() * filteredCafes.length)],
+            type: 'cafe'
+          });
+        }
+      }
+      if (districtLocations.restaurant.length > 0) {
+        const filteredRestaurants = districtLocations.restaurant.filter(rest => 
+          filterByBudget(rest) && filterByMood(rest, 'restaurant')
+        );
+        if (filteredRestaurants.length > 0) {
+          schedule.push({
+            time: '12:00 PM',
+            activity: 'Lunch',
+            location: filteredRestaurants[Math.floor(Math.random() * filteredRestaurants.length)],
+            type: 'restaurant'
+          });
+        }
+      }
+      if (districtLocations.entertainment.length > 0) {
+        const filteredEntertainment = districtLocations.entertainment.filter(ent => 
+          filterByBudget(ent) && filterByMood(ent, 'entertainment')
+        );
+        if (filteredEntertainment.length > 0) {
+          schedule.push({
+            time: '2:00 PM',
+            activity: 'Afternoon Activity',
+            location: filteredEntertainment[Math.floor(Math.random() * filteredEntertainment.length)],
+            type: 'entertainment'
+          });
+        }
+      }
+      if (districtLocations.shopping.length > 0) {
+        const filteredShopping = districtLocations.shopping.filter(shop => 
+          filterByBudget(shop) && filterByMood(shop, 'shopping')
+        );
+        if (filteredShopping.length > 0) {
+          schedule.push({
+            time: '4:00 PM',
+            activity: 'Shopping',
+            location: filteredShopping[Math.floor(Math.random() * filteredShopping.length)],
+            type: 'shopping'
+          });
+        }
+      }
+      if (districtLocations.restaurant.length > 0) {
+        const filteredRestaurants = districtLocations.restaurant.filter(rest => 
+          filterByBudget(rest) && filterByMood(rest, 'restaurant')
+        );
+        if (filteredRestaurants.length > 0) {
+          schedule.push({
+            time: '7:00 PM',
+            activity: 'Dinner',
+            location: filteredRestaurants[Math.floor(Math.random() * filteredRestaurants.length)],
+            type: 'restaurant'
+          });
+        }
+      }
   }
 
   return schedule;
 };
 
 const ScheduleScreen: React.FC<Props> = ({ route, navigation }) => {
-  const params = route.params;
-  console.log('Route params:', params); // Debug log
-
-  const [currentDistrict, setCurrentDistrict] = useState<string | undefined>(params?.selectedDistrict);
-  const [currentPreferences, setCurrentPreferences] = useState<{
-    cafes: boolean;
-    restaurants: boolean;
-    entertainment: boolean;
-    shopping: boolean;
-  } | undefined>(params?.preferences);
+  const { moodType, area, budget, timeSlot } = route.params;
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
 
   useEffect(() => {
-    console.log('Current District:', currentDistrict); // Debug log
-    console.log('Current Preferences:', currentPreferences); // Debug log
-    
-    if (params?.selectedDistrict) {
-      setCurrentDistrict(params.selectedDistrict);
-      if (params.preferences) {
-        // Đảm bảo tất cả các preferences đều là boolean
-        const validPreferences = {
-          cafes: Boolean(params.preferences.cafes),
-          restaurants: Boolean(params.preferences.restaurants),
-          entertainment: Boolean(params.preferences.entertainment),
-          shopping: Boolean(params.preferences.shopping)
-        };
-        setCurrentPreferences(validPreferences);
-        try {
-          const newSchedule = generateSchedule(params.selectedDistrict, validPreferences);
-          setSchedule(newSchedule);
-        } catch (error) {
-          console.error('Error generating schedule:', error);
-        }
-      }
-    }
-  }, [params]);
+    // Generate initial schedule based on all params
+    const newSchedule = generateSchedule(area, moodType, budget, timeSlot);
+    setSchedule(newSchedule);
+  }, [area, moodType, budget, timeSlot]);
 
   const handleRegenerate = () => {
-    console.log('Regenerating with:', { currentDistrict, currentPreferences }); // Debug log
+    console.log('Regenerating with:', { area, moodType, budget, timeSlot }); // Debug log
     
-    if (!currentDistrict || !currentPreferences) {
-      console.warn('Missing required parameters for regeneration');
+    if (!area) {
+      console.warn('Missing required parameter for regeneration');
       return;
     }
 
     try {
-      const newSchedule = generateSchedule(currentDistrict, currentPreferences);
+      const newSchedule = generateSchedule(area, moodType, budget, timeSlot);
       setSchedule(newSchedule);
     } catch (error) {
       console.error('Error regenerating schedule:', error);
     }
   };
 
-  if (!currentDistrict) {
+  if (!area) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Vui lòng chọn khu vực</Text>
-        <Button
-          mode="contained"
-          onPress={() => navigation.goBack()}
-          style={[styles.button, styles.errorButton]}
-        >
-          Quay lại
-        </Button>
-      </View>
-    );
-  }
-
-  if (!currentPreferences) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Vui lòng chọn sở thích của bạn</Text>
         <Button
           mode="contained"
           onPress={() => navigation.goBack()}

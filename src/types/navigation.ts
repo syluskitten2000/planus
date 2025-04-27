@@ -2,15 +2,21 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Welcome: undefined;
-  Preferences: undefined;
+  ForgotPassword: undefined;
+  Mood: undefined;
+  Preferences: { moodType: string };
   Schedule: {
-    selectedDistrict: string;
-    preferences: {
-      cafes: boolean;
-      restaurants: boolean;
-      entertainment: boolean;
-      shopping: boolean;
-    };
+    moodType: string;
+    area: string;
+    budget: string;
+    timeSlot: string;
+  };
+  Confirmation: {
+    schedule: Array<{
+      time: string;
+      activity: string;
+      location: string;
+    }>;
   };
   History: undefined;
 }; 
