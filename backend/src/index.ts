@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import { AppError } from './utils/appError';
+import connectDB from './config/database';
 
 // Load environment variables
 dotenv.config();
@@ -28,13 +29,18 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 
+// Route test
+app.get('/api/hello', (_req, res) => {
+  res.json({ message: 'Hello from Express server!' });
+});
+
 // Error handling for undefined routes
-app.all('*', (req, res, next) => {
-  next(new AppError(`Không tìm thấy ${req.originalUrl} trên server này`, 404));
+app.all('*', (_req, _res, next) => {
+  next(new AppError(`Không tìm thấy ${_req.originalUrl} trên server này`, 404));
 });
 
 // Global error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Error:', err);
   
   err.statusCode = err.statusCode || 500;
@@ -106,5 +112,8 @@ process.on('uncaughtException', (err) => {
   console.error(err);
   process.exit(1);
 });
+
+// Kết nối MongoDB
+connectDB();
 
 startServer(); 

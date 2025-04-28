@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { User } from '../models/User';
+import User from '../models/User';
 import { sendResetPasswordEmail } from '../utils/email';
 import { AppError } from '../utils/appError';
 import { catchAsync } from '../utils/catchAsync';
 
 const signToken = (userId: string): string => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET!, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
+  const secret = process.env.JWT_SECRET as string;
+  const expiresIn = process.env.JWT_EXPIRES_IN || '1h';
+  return jwt.sign({ id: userId }, secret, { expiresIn } as any);
 };
 
 export const register = catchAsync(async (req: Request, res: Response) => {
@@ -29,7 +29,7 @@ export const register = catchAsync(async (req: Request, res: Response) => {
   });
 
   // Generate token
-  const token = signToken(user._id);
+  const token = signToken(String(user._id || ''));
 
   res.status(201).json({
     status: 'success',
@@ -57,7 +57,7 @@ export const login = catchAsync(async (req: Request, res: Response) => {
   }
 
   // Generate token
-  const token = signToken(user._id);
+  const token = signToken(String(user._id || ''));
 
   res.status(200).json({
     status: 'success',
@@ -131,7 +131,7 @@ export const resetPassword = catchAsync(async (req: Request, res: Response) => {
   await user.save();
 
   // Generate new token
-  const newToken = signToken(user._id);
+  const newToken = signToken(String(user._id || ''));
 
   res.status(200).json({
     status: 'success',
