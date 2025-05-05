@@ -1,9 +1,10 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Provider as PaperProvider } from 'react-native-paper';
+import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import type { RootStackParamList } from './src/types/navigation';
 
 // Screens
 import WelcomeScreen from './src/screens/WelcomeScreen';
@@ -17,41 +18,46 @@ import ScheduleScreen from './src/screens/ScheduleScreen';
 import ConfirmationScreen from './src/screens/ConfirmationScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
-
-// Types
-export type RootStackParamList = {
-  Welcome: undefined;
-  Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
-  Home: undefined;
-  Mood: undefined;
-  Preferences: { moodType: string };
-  Schedule: {
-    moodType: string;
-    area: string;
-    budget: string;
-    timeSlot: string;
-  };
-  Confirmation: {
-    schedule: Array<{
-      time: string;
-      activity: string;
-      location: string;
-    }>;
-  };
-  History: undefined;
-  Profile: undefined;
-};
+import UsersScreen from './src/screens/UsersScreen';
+import ChatScreen from './src/screens/ChatScreen';
 
 // Theme
 const theme = {
+  ...MD3LightTheme,
   colors: {
+    ...MD3LightTheme.colors,
     primary: '#FF9999',
-    accent: '#99CCFF',
+    onPrimary: '#FFFFFF',
+    primaryContainer: '#FFE5E5',
+    onPrimaryContainer: '#FF9999',
+    secondary: '#FFB6C1',
+    onSecondary: '#FFFFFF',
+    secondaryContainer: '#E5F2FF',
+    onSecondaryContainer: '#99CCFF',
+    tertiary: '#FFC0CB',
+    onTertiary: '#FFFFFF',
+    tertiaryContainer: '#FFE5E5',
+    onTertiaryContainer: '#FFB3B3',
     background: '#FFF5F5',
+    onBackground: '#333333',
     surface: '#FFFFFF',
-    text: '#333333',
+    onSurface: '#333333',
+    surfaceVariant: '#FFE5E5',
+    onSurfaceVariant: '#666666',
+    error: '#FF5252',
+    onError: '#FFFFFF',
+    errorContainer: '#FFE5E5',
+    onErrorContainer: '#FF5252',
+    outline: '#CCCCCC',
+    outlineVariant: '#E5E5E5',
+    elevation: {
+      level0: 'transparent',
+      level1: '#FFFFFF',
+      level2: '#FFFFFF',
+      level3: '#FFFFFF',
+      level4: '#FFFFFF',
+      level5: '#FFFFFF',
+    },
   },
 };
 
@@ -66,7 +72,7 @@ function Navigation() {
         headerStyle: {
           backgroundColor: theme.colors.background,
         },
-        headerTintColor: theme.colors.text,
+        headerTintColor: theme.colors.onBackground,
         headerShadowVisible: false,
       }}
     >
@@ -107,6 +113,16 @@ function Navigation() {
             name="Profile" 
             component={ProfileScreen}
             options={{ title: 'Hồ sơ' }}
+          />
+          <Stack.Screen 
+            name="Users" 
+            component={UsersScreen}
+            options={{ title: 'Danh sách người dùng' }}
+          />
+          <Stack.Screen 
+            name="Chat" 
+            component={ChatScreen}
+            options={{ title: 'Tin nhắn' }}
           />
         </>
       ) : (

@@ -1,8 +1,12 @@
+import { User } from './user';
+import { ScheduleItem } from './schedule';
+
 export type RootStackParamList = {
+  Welcome: undefined;
   Login: undefined;
   Register: undefined;
-  Welcome: undefined;
   ForgotPassword: undefined;
+  Home: undefined;
   Mood: undefined;
   Preferences: { moodType: string };
   Schedule: {
@@ -12,11 +16,10 @@ export type RootStackParamList = {
     timeSlot: string;
   };
   Confirmation: {
-    schedule: Array<{
-      time: string;
-      activity: string;
-      location: string;
-    }>;
+    schedule: ScheduleItem[];
   };
   History: undefined;
+  Profile: { userId?: string };
+  Users: undefined;
+  Chat: { userId: string };
 }; 

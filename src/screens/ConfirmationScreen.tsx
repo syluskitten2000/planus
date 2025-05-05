@@ -1,80 +1,34 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Button, Card, Text, List } from 'react-native-paper';
+import { StyleSheet, View, ScrollView } from 'react-native';
+import { Text, Button } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  Confirmation: {
-    schedule: Array<{
-      time: string;
-      activity: string;
-      location: string;
-    }>;
-  };
-  History: undefined;
-  Welcome: undefined;
-};
+import type { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Confirmation'>;
 
-export default function ConfirmationScreen({ navigation, route }: Props) {
+const ConfirmationScreen: React.FC<Props> = ({ route, navigation }) => {
   const { schedule } = route.params;
 
-  const handleViewHistory = () => {
-    navigation.navigate('History');
-  };
-
-  const handleCreateNew = () => {
-    navigation.navigate('Welcome');
-  };
-
   return (
-    <View style={styles.container}>
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.successContainer}>
-            <Text style={styles.successIcon}>✓</Text>
-            <Text style={styles.title}>Kế hoạch đã được lưu!</Text>
-          </View>
-
-          <View style={styles.scheduleContainer}>
-            {schedule.map((item, index) => (
-              <List.Item
-                key={index}
-                title={item.activity}
-                description={item.location}
-                left={() => (
-                  <View style={styles.timeContainer}>
-                    <Text style={styles.time}>{item.time}</Text>
-                  </View>
-                )}
-                style={styles.scheduleItem}
-              />
-            ))}
-          </View>
-        </Card.Content>
-      </Card>
-
-      <View style={styles.buttonContainer}>
-        <Button
-          mode="outlined"
-          onPress={handleCreateNew}
-          style={[styles.button, styles.newButton]}
-          textColor="#FF9999"
-        >
-          Tạo kế hoạch mới
-        </Button>
-        <Button
-          mode="contained"
-          onPress={handleViewHistory}
-          style={[styles.button, styles.historyButton]}
-        >
-          Xem lịch sử
-        </Button>
-      </View>
-    </View>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Xác nhận kế hoạch</Text>
+      {schedule.map((item, index) => (
+        <View key={index} style={styles.scheduleItem}>
+          <Text style={styles.time}>{item.time}</Text>
+          <Text style={styles.activity}>{item.activity}</Text>
+          <Text style={styles.location}>{item.location}</Text>
+        </View>
+      ))}
+      <Button
+        mode="contained"
+        onPress={() => navigation.navigate('Home')}
+        style={styles.button}
+      >
+        Xác nhận
+      </Button>
+    </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -82,60 +36,39 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF5F5',
     padding: 20,
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    marginBottom: 20,
-  },
-  successContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  successIcon: {
-    fontSize: 48,
-    color: '#4CAF50',
-    marginBottom: 10,
-  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333333',
+    marginBottom: 20,
     textAlign: 'center',
   },
-  scheduleContainer: {
-    marginTop: 20,
-  },
   scheduleItem: {
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-  },
-  timeContainer: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#FFF5F5',
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    elevation: 2,
   },
   time: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#FF9999',
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 20,
+  activity: {
+    fontSize: 16,
+    marginTop: 5,
+  },
+  location: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 5,
   },
   button: {
-    flex: 1,
+    marginTop: 20,
+    marginBottom: 40,
     borderRadius: 25,
-  },
-  newButton: {
-    borderColor: '#FF9999',
-  },
-  historyButton: {
     backgroundColor: '#FF9999',
   },
-}); 
+});
+
+export default ConfirmationScreen; 

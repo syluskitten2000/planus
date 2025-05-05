@@ -1,76 +1,97 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
-import { Card, Text, List, IconButton } from 'react-native-paper';
+import { Card, Text, List, IconButton, Button, Portal, Modal, Dialog } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  History: undefined;
-};
+import type { RootStackParamList } from '../types/navigation';
+import { ScheduleItem } from '../types/schedule';
+import { schedules } from '../mocks/schedules';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'History'>;
 
-// This would normally come from storage/API
-const savedSchedules = [
-  {
-    date: '28 thg 4, 2024',
-    type: 'Tour ẩm thực',
-    activities: [
-      { time: '17:00', activity: 'Ăn vặt', location: 'Phố Hàng Ngang - Hàng Đào' },
-      { time: '19:00', activity: 'Bữa tối', location: 'Phố Ẩm thực Tống Duy Tân' },
-    ],
-  },
-  {
-    date: '25 thg 4, 2024',
-    type: 'Hoạt động vui vẻ',
-    activities: [
-      { time: '15:00', activity: 'Trò chơi', location: 'Timezone Royal City' },
-      { time: '17:30', activity: 'Cafe', location: 'Cộng Cà Phê - Phố Đinh Liệt' },
-      { time: '19:00', activity: 'Karaoke', location: 'Icool Karaoke - Trung Hòa' },
-    ],
-  },
-];
+export default function HistoryScreen() {
+  const [scheduleList, setScheduleList] = useState<ScheduleItem[]>(schedules);
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null);
 
-export default function HistoryScreen({ navigation }: Props) {
+  const handleDelete = (schedule: ScheduleItem) => {
+    setSelectedSchedule(schedule);
+    setDeleteDialogVisible(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedSchedule) {
+      setScheduleList(prev => prev.filter(item => item.id !== selectedSchedule.id));
+      setDeleteDialogVisible(false);
+      setSelectedSchedule(null);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Lịch sử lưu trữ</Text>
-
-      {savedSchedules.map((schedule, index) => (
-        <Card key={index} style={styles.card}>
-          <Card.Content>
-            <View style={styles.headerContainer}>
-              <View>
-                <Text style={styles.date}>{schedule.date}</Text>
-                <Text style={styles.type}>{schedule.type}</Text>
-              </View>
-              <IconButton
-                icon="content-copy"
-                size={20}
-                onPress={() => {
-                  // Handle reusing this schedule
-                }}
-              />
-            </View>
-
-            <View style={styles.scheduleContainer}>
-              {schedule.activities.map((item, activityIndex) => (
+    <View style={styles.container}>
+      <ScrollView>
+        {scheduleList.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Chưa có lịch trình nào</Text>
+          </View>
+        ) : (
+          scheduleList.map((schedule) => (
+            <Card key={schedule.id} style={styles.card}>
+              <Card.Content>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.time}>{schedule.time}</Text>
+                  <IconButton
+                    icon="delete"
+                    size={20}
+                    onPress={() => handleDelete(schedule)}
+                  />
+                </View>
                 <List.Item
-                  key={activityIndex}
-                  title={item.activity}
-                  description={item.location}
-                  left={() => (
-                    <View style={styles.timeContainer}>
-                      <Text style={styles.time}>{item.time}</Text>
-                    </View>
-                  )}
-                  style={styles.scheduleItem}
+                  title={schedule.activity}
+                  description={schedule.location}
+                  left={props => <List.Icon {...props} icon="calendar-check" />}
                 />
-              ))}
-            </View>
-          </Card.Content>
-        </Card>
-      ))}
-    </ScrollView>
+                <View style={styles.details}>
+                  <Text style={styles.detailText}>Tâm trạng: {schedule.moodType}</Text>
+                  <Text style={styles.detailText}>Khu vực: {schedule.area}</Text>
+                  <Text style={styles.detailText}>Ngân sách: {schedule.budget}</Text>
+                  <Text style={styles.detailText}>Thời gian: {schedule.timeSlot}</Text>
+                </View>
+                <Text style={styles.dateText}>
+                  Tạo lúc: {formatDate(schedule.createdAt)}
+                </Text>
+              </Card.Content>
+            </Card>
+          ))
+        )}
+      </ScrollView>
+
+      <Portal>
+        <Dialog
+          visible={deleteDialogVisible}
+          onDismiss={() => setDeleteDialogVisible(false)}
+        >
+          <Dialog.Title>Xác nhận xóa</Dialog.Title>
+          <Dialog.Content>
+            <Text>Bạn có chắc chắn muốn xóa lịch trình này?</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDeleteDialogVisible(false)}>Hủy</Button>
+            <Button onPress={confirmDelete} textColor="red">Xóa</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </View>
   );
 }
 
@@ -78,56 +99,45 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF5F5',
-    padding: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 20,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    marginBottom: 20,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 15,
-  },
-  date: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
-  },
-  type: {
-    fontSize: 14,
-    color: '#666666',
-    marginTop: 4,
-  },
-  scheduleContainer: {
-    borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
-    paddingTop: 10,
-  },
-  scheduleItem: {
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-  },
-  timeContainer: {
-    width: 50,
-    height: 50,
-    backgroundColor: '#FFF5F5',
-    borderRadius: 25,
+  emptyContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666666',
+  },
+  card: {
+    margin: 8,
+    backgroundColor: '#FFFFFF',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   time: {
-    fontSize: 12,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#FF9999',
+  },
+  details: {
+    marginTop: 8,
+    paddingLeft: 40,
+  },
+  detailText: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 4,
+  },
+  dateText: {
+    fontSize: 12,
+    color: '#999999',
+    marginTop: 8,
+    textAlign: 'right',
   },
 }); 

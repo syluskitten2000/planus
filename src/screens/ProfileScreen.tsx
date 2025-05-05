@@ -1,121 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
-import { Text, Button, Avatar, List, Divider, Portal, Modal, TextInput } from 'react-native-paper';
-import { useAuth } from '../contexts/AuthContext';
+import { Text, Avatar, List, Divider, Button } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  Profile: undefined;
-  Login: undefined;
-};
+import type { RootStackParamList } from '../types/navigation';
+import { User } from '../types/user';
+import { users } from '../mocks/users';
+import { useAuth } from '../contexts/AuthContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
-export default function ProfileScreen({ navigation }: Props) {
-  const { user, signOut, updateUser } = useAuth();
-  const [visible, setVisible] = useState(false);
-  const [newName, setNewName] = useState(user?.name || '');
-  const [loading, setLoading] = useState(false);
+export default function ProfileScreen({ route, navigation }: Props) {
+  const { userId } = route.params;
+  const { user: currentUser } = useAuth();
+  const [profileUser, setProfileUser] = useState<User | null>(null);
+  const isCurrentUser = userId === currentUser?.id;
 
-  const handleUpdateProfile = async () => {
-    try {
-      setLoading(true);
-      if (!user) return;
+  useEffect(() => {
+    const user = users.find(u => u.id === userId);
+    setProfileUser(user || null);
+  }, [userId]);
 
-      await updateUser({
-        ...user,
-        name: newName,
-      });
-      setVisible(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigation.replace('Login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
+  if (!profileUser) {
+    return (
+      <View style={styles.container}>
+        <Text>Không tìm thấy người dùng</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Avatar.Text 
-          size={80} 
-          label={user?.name?.charAt(0) || 'U'} 
+        <Avatar.Text
+          size={80}
+          label={profileUser.name.split(' ').map(n => n[0]).join('')}
           style={styles.avatar}
         />
-        <Text style={styles.name}>{user?.name}</Text>
-        <Text style={styles.email}>{user?.email}</Text>
-        <Button 
-          mode="outlined" 
-          onPress={() => setVisible(true)}
-          style={styles.editButton}
-        >
-          Chỉnh sửa hồ sơ
-        </Button>
+        <Text style={styles.name}>{profileUser.name}</Text>
+        <Text style={styles.userid}>@{profileUser.userid}</Text>
+        {!isCurrentUser && (
+          <Button
+            mode="contained"
+            onPress={() => navigation.navigate('Chat', { userId: profileUser.id })}
+            style={styles.messageButton}
+          >
+            Nhắn tin
+          </Button>
+        )}
       </View>
 
-      <Divider style={styles.divider} />
-
       <List.Section>
+        <List.Subheader>Thông tin cá nhân</List.Subheader>
+        {profileUser.bio && (
+          <List.Item
+            title="Giới thiệu"
+            description={profileUser.bio}
+            left={props => <List.Icon {...props} icon="account" />}
+          />
+        )}
+        {profileUser.location && (
+          <List.Item
+            title="Địa điểm"
+            description={profileUser.location}
+            left={props => <List.Icon {...props} icon="map-marker" />}
+          />
+        )}
         <List.Item
-          title="Cài đặt"
-          left={props => <List.Icon {...props} icon="cog" />}
-          onPress={() => {}}
-        />
-        <List.Item
-          title="Trợ giúp"
-          left={props => <List.Icon {...props} icon="help-circle" />}
-          onPress={() => {}}
-        />
-        <List.Item
-          title="Đăng xuất"
-          left={props => <List.Icon {...props} icon="logout" />}
-          onPress={handleSignOut}
+          title="Tham gia"
+          description={new Date(profileUser.createdAt).toLocaleDateString('vi-VN')}
+          left={props => <List.Icon {...props} icon="calendar" />}
         />
       </List.Section>
 
-      <Portal>
-        <Modal
-          visible={visible}
-          onDismiss={() => setVisible(false)}
-          contentContainerStyle={styles.modal}
-        >
-          <Text style={styles.modalTitle}>Chỉnh sửa hồ sơ</Text>
-          <TextInput
-            label="Tên"
-            value={newName}
-            onChangeText={setNewName}
-            mode="outlined"
-            style={styles.input}
-          />
-          <View style={styles.modalButtons}>
-            <Button
-              mode="outlined"
-              onPress={() => setVisible(false)}
-              style={styles.modalButton}
-            >
-              Hủy
-            </Button>
-            <Button
-              mode="contained"
-              onPress={handleUpdateProfile}
-              loading={loading}
-              disabled={loading || !newName}
-              style={styles.modalButton}
-            >
-              Lưu
-            </Button>
+      {profileUser.interests && profileUser.interests.length > 0 && (
+        <List.Section>
+          <List.Subheader>Sở thích</List.Subheader>
+          <View style={styles.interestsContainer}>
+            {profileUser.interests.map((interest, index) => (
+              <View key={index} style={styles.interestChip}>
+                <Text style={styles.interestText}>{interest}</Text>
+              </View>
+            ))}
           </View>
-        </Modal>
-      </Portal>
+        </List.Section>
+      )}
     </ScrollView>
   );
 }
@@ -123,11 +91,15 @@ export default function ProfileScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF5F5',
   },
   header: {
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    elevation: 2,
   },
   avatar: {
     backgroundColor: '#FF9999',
@@ -136,38 +108,30 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  userid: {
+    fontSize: 16,
+    color: '#666666',
+    marginBottom: 16,
+  },
+  messageButton: {
+    marginTop: 8,
+  },
+  interestsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 16,
+  },
+  interestChip: {
+    backgroundColor: '#FFE5E5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
     marginBottom: 8,
   },
-  email: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 16,
-  },
-  editButton: {
-    borderColor: '#FF9999',
-  },
-  divider: {
-    marginVertical: 16,
-  },
-  modal: {
-    backgroundColor: 'white',
-    padding: 20,
-    margin: 20,
-    borderRadius: 8,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  input: {
-    marginBottom: 16,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  modalButton: {
-    marginLeft: 8,
+  interestText: {
+    color: '#FF9999',
   },
 }); 

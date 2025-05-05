@@ -1,87 +1,100 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AUTH_STORAGE_KEY, USER_STORAGE_KEY } from '../config/storage';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
+import { User } from '../types/user';
+import { users } from '../mocks/users';
 
 interface AuthContextType {
   user: User | null;
-  isLoading: boolean;
-  signIn: (token: string, userData: User) => Promise<void>;
+  signIn: (userid: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  updateUser: (userData: User) => Promise<void>;
+  register: (userData: Omit<User, 'id' | 'createdAt' | 'lastLogin' | 'status'>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load saved user data when app starts
     loadUser();
   }, []);
 
-  async function loadUser() {
+  const loadUser = async () => {
     try {
-      const [token, userData] = await Promise.all([
-        AsyncStorage.getItem(AUTH_STORAGE_KEY),
-        AsyncStorage.getItem(USER_STORAGE_KEY),
-      ]);
-
-      if (token && userData) {
-        setUser(JSON.parse(userData));
+      const storedUser = await AsyncStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
       }
     } catch (error) {
-      console.error('Error loading user data:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error loading user:', error);
     }
-  }
+  };
 
-  async function signIn(token: string, userData: User) {
+  const signIn = async (userid: string, password: string) => {
     try {
-      await Promise.all([
-        AsyncStorage.setItem(AUTH_STORAGE_KEY, token),
-        AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData)),
-      ]);
-      setUser(userData);
+      const foundUser = users.find(
+        u => u.userid === userid && u.password === password
+      );
+
+      if (!foundUser) {
+        throw new Error('Tên đăng nhập hoặc mật khẩu không đúng');
+      }
+
+      const userToStore = {
+        ...foundUser,
+        lastLogin: new Date().toISOString(),
+      };
+
+      await AsyncStorage.setItem('user', JSON.stringify(userToStore));
+      setUser(userToStore);
     } catch (error) {
-      console.error('Error saving auth data:', error);
-      throw new Error('Không thể lưu thông tin đăng nhập');
+      console.error('Sign in error:', error);
+      throw error;
     }
-  }
+  };
 
-  async function signOut() {
+  const signOut = async () => {
     try {
-      await Promise.all([
-        AsyncStorage.removeItem(AUTH_STORAGE_KEY),
-        AsyncStorage.removeItem(USER_STORAGE_KEY),
-      ]);
+      await AsyncStorage.removeItem('user');
       setUser(null);
     } catch (error) {
-      console.error('Error clearing auth data:', error);
-      throw new Error('Không thể đăng xuất');
+      console.error('Sign out error:', error);
+      throw error;
     }
-  }
+  };
 
-  async function updateUser(userData: User) {
+  const register = async (userData: Omit<User, 'id' | 'createdAt' | 'lastLogin' | 'status'>) => {
     try {
-      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
-      setUser(userData);
+      // Check if userid already exists
+      const existingUser = users.find(u => u.userid === userData.userid);
+      if (existingUser) {
+        throw new Error('Tên đăng nhập đã tồn tại');
+      }
+
+      // Create new user
+      const newUser: User = {
+        ...userData,
+        id: (users.length + 1).toString(),
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        status: 'active',
+      };
+
+      // In a real app, you would save this to your backend
+      // For now, we'll just add it to our mock data
+      users.push(newUser);
+
+      // Save to AsyncStorage
+      await AsyncStorage.setItem('user', JSON.stringify(newUser));
+      setUser(newUser);
     } catch (error) {
-      console.error('Error updating user data:', error);
-      throw new Error('Không thể cập nhật thông tin người dùng');
+      console.error('Registration error:', error);
+      throw error;
     }
-  }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signOut, updateUser }}>
+    <AuthContext.Provider value={{ user, signIn, signOut, register }}>
       {children}
     </AuthContext.Provider>
   );

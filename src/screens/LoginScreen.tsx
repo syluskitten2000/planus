@@ -1,94 +1,61 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { TextInput, Button, Text, HelperText, Snackbar } from 'react-native-paper';
+import { StyleSheet, View, ScrollView } from 'react-native';
+import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { AuthService } from '../services/auth.service';
-import * as EmailValidator from 'email-validator';
 import { useAuth } from '../contexts/AuthContext';
-
-type RootStackParamList = {
-  Login: undefined;
-  Register: undefined;
-  Welcome: undefined;
-  ForgotPassword: undefined;
-  Mood: undefined;
-};
+import type { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
-const authService = new AuthService();
-
 export default function LoginScreen({ navigation }: Props) {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState('');
+  const [userid, setUserid] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [showError, setShowError] = useState(false);
+  const [errors, setErrors] = useState<{
+    userid?: string;
+    password?: string;
+  }>({});
 
-  const validateEmail = () => {
-    return email.length === 0 || EmailValidator.validate(email);
-  };
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
 
-  const validatePassword = () => {
-    return password.length === 0 || password.length >= 6;
+    if (!userid) {
+      newErrors.userid = 'Vui lòng nhập tên đăng nhập';
+    }
+
+    if (!password) {
+      newErrors.password = 'Vui lòng nhập mật khẩu';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleLogin = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      // Validation
-      if (!email || !password) {
-        throw new Error('Vui lòng nhập đầy đủ email và mật khẩu');
+    if (validateForm()) {
+      try {
+        await signIn(userid, password);
+      } catch (error) {
+        console.error('Login error:', error);
       }
-
-      if (!EmailValidator.validate(email)) {
-        throw new Error('Email không hợp lệ');
-      }
-
-      if (password.length < 6) {
-        throw new Error('Mật khẩu phải có ít nhất 6 ký tự');
-      }
-
-      // Call API
-      const user = await authService.login(email, password);
-      
-      // Save auth data
-      await signIn('', user);
-
-      // Navigate to Mood screen
-      navigation.replace('Mood');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
-      setShowError(true);
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>PlanUs</Text>
-        <Text style={styles.subtitle}>Đăng nhập để lên kế hoạch hẹn hò</Text>
-      </View>
-
-      <View style={styles.form}>
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Đăng nhập</Text>
+        
         <TextInput
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
+          label="Tên đăng nhập"
+          value={userid}
+          onChangeText={setUserid}
           mode="outlined"
           style={styles.input}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          error={!validateEmail()}
+          error={!!errors.userid}
         />
-        <HelperText type="error" visible={!validateEmail()}>
-          Email không hợp lệ
+        <HelperText type="error" visible={!!errors.userid}>
+          {errors.userid}
         </HelperText>
 
         <TextInput
@@ -96,24 +63,18 @@ export default function LoginScreen({ navigation }: Props) {
           value={password}
           onChangeText={setPassword}
           mode="outlined"
+          secureTextEntry
           style={styles.input}
-          secureTextEntry={!showPassword}
-          error={!validatePassword()}
-          right={
-            <TextInput.Icon
-              icon={showPassword ? 'eye-off' : 'eye'}
-              onPress={() => setShowPassword(!showPassword)}
-            />
-          }
+          error={!!errors.password}
         />
-        <HelperText type="error" visible={!validatePassword()}>
-          Mật khẩu phải có ít nhất 6 ký tự
+        <HelperText type="error" visible={!!errors.password}>
+          {errors.password}
         </HelperText>
 
         <Button
           mode="text"
           onPress={() => navigation.navigate('ForgotPassword')}
-          style={styles.forgotButton}
+          style={styles.forgotPassword}
         >
           Quên mật khẩu?
         </Button>
@@ -122,33 +83,19 @@ export default function LoginScreen({ navigation }: Props) {
           mode="contained"
           onPress={handleLogin}
           style={styles.button}
-          loading={loading}
-          disabled={loading || !email || !password || !validateEmail() || !validatePassword()}
         >
           Đăng nhập
         </Button>
 
-        <View style={styles.registerContainer}>
-          <Text>Chưa có tài khoản? </Text>
-          <Button
-            mode="text"
-            onPress={() => navigation.navigate('Register')}
-            style={styles.registerButton}
-          >
-            Đăng ký ngay
-          </Button>
-        </View>
+        <Button
+          mode="text"
+          onPress={() => navigation.navigate('Register')}
+          style={styles.button}
+        >
+          Chưa có tài khoản? Đăng ký
+        </Button>
       </View>
-
-      <Snackbar
-        visible={showError}
-        onDismiss={() => setShowError(false)}
-        duration={3000}
-        style={styles.snackbar}
-      >
-        {error}
-      </Snackbar>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -156,50 +103,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF5F5',
-    padding: 20,
   },
-  header: {
-    alignItems: 'center',
-    marginTop: 60,
-    marginBottom: 40,
+  content: {
+    padding: 20,
+    paddingTop: 50,
   },
   title: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FF9999',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666666',
-  },
-  form: {
-    flex: 1,
+    marginBottom: 24,
+    textAlign: 'center',
   },
   input: {
     marginBottom: 4,
-    backgroundColor: '#FFFFFF',
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
   },
   button: {
-    marginTop: 24,
-    paddingVertical: 6,
-    backgroundColor: '#FF9999',
-  },
-  registerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  registerButton: {
-    marginLeft: -8,
-  },
-  forgotButton: {
-    alignSelf: 'flex-end',
-    marginTop: -8,
-    marginBottom: 16,
-  },
-  snackbar: {
-    backgroundColor: '#FF4444',
+    marginTop: 16,
   },
 }); 

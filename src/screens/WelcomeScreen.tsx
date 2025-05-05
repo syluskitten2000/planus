@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../../App';
+import type { RootStackParamList } from '../types/navigation';
 
 const { width, height } = Dimensions.get('window');
 

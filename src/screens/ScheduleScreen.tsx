@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { Button, Card, Text } from 'react-native-paper';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Schedule'>;
 
@@ -25,9 +25,14 @@ type Locations = {
 };
 
 type ScheduleItem = {
+  id: string;
   time: string;
   activity: string;
   location: LocationDetail;
+  moodType: string;
+  area: string;
+  budget: string;
+  timeSlot: string;
   type: string;
 };
 
@@ -915,9 +920,14 @@ const generateSchedule = (
         );
         if (filteredCafes.length > 0) {
           schedule.push({
+            id: '1',
             time: '8:00 AM',
             activity: 'Morning Coffee',
             location: filteredCafes[Math.floor(Math.random() * filteredCafes.length)],
+            moodType,
+            area: selectedDistrict,
+            budget,
+            timeSlot,
             type: 'cafe'
           });
         }
@@ -928,9 +938,14 @@ const generateSchedule = (
         );
         if (filteredEntertainment.length > 0) {
           schedule.push({
+            id: '2',
             time: '10:00 AM',
             activity: 'Morning Activity',
             location: filteredEntertainment[Math.floor(Math.random() * filteredEntertainment.length)],
+            moodType,
+            area: selectedDistrict,
+            budget,
+            timeSlot,
             type: 'entertainment'
           });
         }
@@ -944,9 +959,14 @@ const generateSchedule = (
         );
         if (filteredRestaurants.length > 0) {
           schedule.push({
+            id: '3',
             time: '12:00 PM',
             activity: 'Lunch',
             location: filteredRestaurants[Math.floor(Math.random() * filteredRestaurants.length)],
+            moodType,
+            area: selectedDistrict,
+            budget,
+            timeSlot,
             type: 'restaurant'
           });
         }
@@ -957,9 +977,14 @@ const generateSchedule = (
         );
         if (filteredEntertainment.length > 0) {
           schedule.push({
+            id: '4',
             time: '2:00 PM',
             activity: 'Afternoon Activity',
             location: filteredEntertainment[Math.floor(Math.random() * filteredEntertainment.length)],
+            moodType,
+            area: selectedDistrict,
+            budget,
+            timeSlot,
             type: 'entertainment'
           });
         }
@@ -973,9 +998,14 @@ const generateSchedule = (
         );
         if (filteredEntertainment.length > 0) {
           schedule.push({
+            id: '5',
             time: '5:00 PM',
             activity: 'Evening Activity',
             location: filteredEntertainment[Math.floor(Math.random() * filteredEntertainment.length)],
+            moodType,
+            area: selectedDistrict,
+            budget,
+            timeSlot,
             type: 'entertainment'
           });
         }
@@ -986,9 +1016,14 @@ const generateSchedule = (
         );
         if (filteredRestaurants.length > 0) {
           schedule.push({
+            id: '6',
             time: '7:00 PM',
             activity: 'Dinner',
             location: filteredRestaurants[Math.floor(Math.random() * filteredRestaurants.length)],
+            moodType,
+            area: selectedDistrict,
+            budget,
+            timeSlot,
             type: 'restaurant'
           });
         }
@@ -1003,9 +1038,14 @@ const generateSchedule = (
         );
         if (filteredCafes.length > 0) {
           schedule.push({
+            id: '7',
             time: '9:00 AM',
             activity: 'Morning Coffee',
             location: filteredCafes[Math.floor(Math.random() * filteredCafes.length)],
+            moodType,
+            area: selectedDistrict,
+            budget,
+            timeSlot,
             type: 'cafe'
           });
         }
@@ -1016,9 +1056,14 @@ const generateSchedule = (
         );
         if (filteredRestaurants.length > 0) {
           schedule.push({
+            id: '8',
             time: '12:00 PM',
             activity: 'Lunch',
             location: filteredRestaurants[Math.floor(Math.random() * filteredRestaurants.length)],
+            moodType,
+            area: selectedDistrict,
+            budget,
+            timeSlot,
             type: 'restaurant'
           });
         }
@@ -1029,9 +1074,14 @@ const generateSchedule = (
         );
         if (filteredEntertainment.length > 0) {
           schedule.push({
+            id: '9',
             time: '2:00 PM',
             activity: 'Afternoon Activity',
             location: filteredEntertainment[Math.floor(Math.random() * filteredEntertainment.length)],
+            moodType,
+            area: selectedDistrict,
+            budget,
+            timeSlot,
             type: 'entertainment'
           });
         }
@@ -1042,9 +1092,14 @@ const generateSchedule = (
         );
         if (filteredShopping.length > 0) {
           schedule.push({
+            id: '10',
             time: '4:00 PM',
             activity: 'Shopping',
             location: filteredShopping[Math.floor(Math.random() * filteredShopping.length)],
+            moodType,
+            area: selectedDistrict,
+            budget,
+            timeSlot,
             type: 'shopping'
           });
         }
@@ -1055,9 +1110,14 @@ const generateSchedule = (
         );
         if (filteredRestaurants.length > 0) {
           schedule.push({
+            id: '11',
             time: '7:00 PM',
             activity: 'Dinner',
             location: filteredRestaurants[Math.floor(Math.random() * filteredRestaurants.length)],
+            moodType,
+            area: selectedDistrict,
+            budget,
+            timeSlot,
             type: 'restaurant'
           });
         }
@@ -1069,28 +1129,44 @@ const generateSchedule = (
 
 const ScheduleScreen: React.FC<Props> = ({ route, navigation }) => {
   const { moodType, area, budget, timeSlot } = route.params;
-  const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
+  const [schedule] = useState<ScheduleItem[]>([
+    { 
+      id: '1',
+      time: '09:00', 
+      activity: 'Ăn sáng', 
+      location: 'Cafe ABC',
+      moodType,
+      area,
+      budget,
+      timeSlot,
+      type: 'cafe'
+    },
+    { 
+      id: '2',
+      time: '14:00', 
+      activity: 'Xem phim', 
+      location: 'CGV Vincom',
+      moodType,
+      area,
+      budget,
+      timeSlot,
+      type: 'entertainment'
+    },
+    { 
+      id: '3',
+      time: '19:00', 
+      activity: 'Ăn tối', 
+      location: 'Nhà hàng XYZ',
+      moodType,
+      area,
+      budget,
+      timeSlot,
+      type: 'restaurant'
+    },
+  ]);
 
-  useEffect(() => {
-    // Generate initial schedule based on all params
-    const newSchedule = generateSchedule(area, moodType, budget, timeSlot);
-    setSchedule(newSchedule);
-  }, [area, moodType, budget, timeSlot]);
-
-  const handleRegenerate = () => {
-    console.log('Regenerating with:', { area, moodType, budget, timeSlot }); // Debug log
-    
-    if (!area) {
-      console.warn('Missing required parameter for regeneration');
-      return;
-    }
-
-    try {
-      const newSchedule = generateSchedule(area, moodType, budget, timeSlot);
-      setSchedule(newSchedule);
-    } catch (error) {
-      console.error('Error regenerating schedule:', error);
-    }
+  const handleConfirm = () => {
+    navigation.navigate('Confirmation', { schedule });
   };
 
   if (!area) {
@@ -1109,97 +1185,75 @@ const ScheduleScreen: React.FC<Props> = ({ route, navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Lịch trình của bạn</Text>
-      <ScrollView style={styles.scheduleContainer}>
-        {schedule.map((item, index) => (
-          <Card key={index} style={styles.scheduleItem}>
-            <Card.Content>
-              <Text style={styles.time}>{item.time}</Text>
-              <Text style={styles.activity}>{item.activity}</Text>
-              <Text style={styles.locationName}>{item.location.name}</Text>
-              <Text style={styles.locationDetails}>Địa chỉ: {item.location.address}</Text>
-              <Text style={styles.locationDetails}>Giờ mở cửa: {item.location.openTime}</Text>
-              <Text style={styles.locationDetails}>Giá: {item.location.priceRange}</Text>
-            </Card.Content>
-          </Card>
-        ))}
-      </ScrollView>
-      <View style={styles.buttonContainer}>
-        <Button
-          mode="outlined"
-          onPress={handleRegenerate}
-          style={[styles.button, { borderColor: '#FF69B4' }]}
-          labelStyle={{ color: '#FF69B4' }}
-        >
-          Gợi ý lại
-        </Button>
-        <Button
-          mode="contained"
-          onPress={() => navigation.navigate('Welcome')}
-          style={[styles.button, { backgroundColor: '#FF69B4' }]}
-        >
-          Chọn lịch trình này
-        </Button>
-      </View>
-    </View>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Kế hoạch của bạn</Text>
+      <Text style={styles.subtitle}>Mood: {moodType}</Text>
+      <Text style={styles.subtitle}>Khu vực: {area}</Text>
+      <Text style={styles.subtitle}>Ngân sách: {budget}</Text>
+      <Text style={styles.subtitle}>Thời gian: {timeSlot}</Text>
+
+      {schedule.map((item, index) => (
+        <View key={index} style={styles.scheduleItem}>
+          <Text style={styles.time}>{item.time}</Text>
+          <Text style={styles.activity}>{item.activity}</Text>
+          <Text style={styles.location}>{item.location.name}</Text>
+        </View>
+      ))}
+
+      <Button
+        mode="contained"
+        onPress={handleConfirm}
+        style={styles.button}
+      >
+        Xác nhận
+      </Button>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#FFF5F5',
+    padding: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333333',
+    marginBottom: 10,
     textAlign: 'center',
   },
-  scheduleContainer: {
-    flex: 1,
+  subtitle: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#666666',
   },
   scheduleItem: {
-    marginBottom: 16,
-    padding: 12,
     backgroundColor: '#FFFFFF',
-    elevation: 4,
-    borderRadius: 8,
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    elevation: 2,
   },
   time: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FF9999',
-    marginBottom: 8,
   },
   activity: {
     fontSize: 16,
-    color: '#666666',
-    marginBottom: 4,
+    marginTop: 5,
   },
-  locationName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 8,
-  },
-  locationDetails: {
+  location: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
-    gap: 12,
+    color: '#666666',
+    marginTop: 5,
   },
   button: {
-    flex: 1,
-    borderRadius: 24,
+    marginTop: 20,
+    marginBottom: 40,
+    borderRadius: 25,
+    backgroundColor: '#FF9999',
   },
   errorButton: {
     backgroundColor: '#FF69B4',

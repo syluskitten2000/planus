@@ -1,204 +1,158 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
-import { TextInput, Button, Text, HelperText, Snackbar } from 'react-native-paper';
+import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { AuthService } from '../services/auth.service';
-import * as EmailValidator from 'email-validator';
 import { useAuth } from '../contexts/AuthContext';
-
-type RootStackParamList = {
-  Register: undefined;
-  Login: undefined;
-  Welcome: undefined;
-};
+import type { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
-interface ValidationErrors {
-  name?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-}
-
-const authService = new AuthService();
-
 export default function RegisterScreen({ navigation }: Props) {
-  const { signIn } = useAuth();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [showError, setShowError] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const { register } = useAuth();
+  const [userid, setUserid] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [errors, setErrors] = useState<{
+    userid?: string;
+    name?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
 
-  const validateForm = (): boolean => {
-    const errors: ValidationErrors = {};
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
 
-    // Validate name
-    if (!formData.name.trim()) {
-      errors.name = 'Vui lòng nhập họ tên';
-    } else if (formData.name.length < 2) {
-      errors.name = 'Họ tên phải có ít nhất 2 ký tự';
+    if (!userid) {
+      newErrors.userid = 'Vui lòng nhập tên đăng nhập';
+    } else if (userid.length < 3) {
+      newErrors.userid = 'Tên đăng nhập phải có ít nhất 3 ký tự';
     }
 
-    // Validate email
-    if (!formData.email) {
-      errors.email = 'Vui lòng nhập email';
-    } else if (!EmailValidator.validate(formData.email)) {
-      errors.email = 'Email không hợp lệ';
+    if (!name) {
+      newErrors.name = 'Vui lòng nhập họ tên';
     }
 
-    // Validate password
-    if (!formData.password) {
-      errors.password = 'Vui lòng nhập mật khẩu';
-    } else if (formData.password.length < 6) {
-      errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-    } else if (!/\d/.test(formData.password)) {
-      errors.password = 'Mật khẩu phải chứa ít nhất 1 số';
-    } else if (!/[a-z]/.test(formData.password)) {
-      errors.password = 'Mật khẩu phải chứa ít nhất 1 chữ thường';
-    } else if (!/[A-Z]/.test(formData.password)) {
-      errors.password = 'Mật khẩu phải chứa ít nhất 1 chữ hoa';
+    if (!email) {
+      newErrors.email = 'Vui lòng nhập email';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Email không hợp lệ';
     }
 
-    // Validate confirm password
-    if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
-    } else if (formData.confirmPassword !== formData.password) {
-      errors.confirmPassword = 'Mật khẩu xác nhận không khớp';
+    if (!password) {
+      newErrors.password = 'Vui lòng nhập mật khẩu';
+    } else if (password.length < 6) {
+      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
     }
 
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Vui lòng nhập lại mật khẩu';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Mật khẩu không khớp';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleRegister = async () => {
-    try {
-      if (!validateForm()) {
-        return;
+    if (validateForm()) {
+      try {
+        await register({ userid, name, email, password });
+        navigation.replace('Login');
+      } catch (error) {
+        console.error('Registration error:', error);
       }
-
-      setLoading(true);
-      setError('');
-
-      const user = await authService.register(formData.email.toLowerCase(), formData.password, formData.name.trim());
-
-      // Save auth data
-      await signIn('', user);
-
-      // Navigate to Welcome screen
-      navigation.replace('Welcome');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Đã có lỗi xảy ra';
-      setError(errorMessage);
-      setShowError(true);
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
+      <View style={styles.content}>
         <Text style={styles.title}>Đăng ký tài khoản</Text>
-        <Text style={styles.subtitle}>Tạo tài khoản để bắt đầu lên kế hoạch</Text>
-      </View>
-
-      <View style={styles.form}>
+        
         <TextInput
-          label="Họ tên"
-          value={formData.name}
-          onChangeText={(text) => setFormData({ ...formData, name: text })}
+          label="Tên đăng nhập"
+          value={userid}
+          onChangeText={setUserid}
           mode="outlined"
           style={styles.input}
-          error={!!validationErrors.name}
+          error={!!errors.userid}
         />
-        <HelperText type="error" visible={!!validationErrors.name}>
-          {validationErrors.name}
+        <HelperText type="error" visible={!!errors.userid}>
+          {errors.userid}
+        </HelperText>
+
+        <TextInput
+          label="Họ tên"
+          value={name}
+          onChangeText={setName}
+          mode="outlined"
+          style={styles.input}
+          error={!!errors.name}
+        />
+        <HelperText type="error" visible={!!errors.name}>
+          {errors.name}
         </HelperText>
 
         <TextInput
           label="Email"
-          value={formData.email}
-          onChangeText={(text) => setFormData({ ...formData, email: text })}
+          value={email}
+          onChangeText={setEmail}
           mode="outlined"
-          style={styles.input}
           keyboardType="email-address"
           autoCapitalize="none"
-          error={!!validationErrors.email}
+          style={styles.input}
+          error={!!errors.email}
         />
-        <HelperText type="error" visible={!!validationErrors.email}>
-          {validationErrors.email}
+        <HelperText type="error" visible={!!errors.email}>
+          {errors.email}
         </HelperText>
 
         <TextInput
           label="Mật khẩu"
-          value={formData.password}
-          onChangeText={(text) => setFormData({ ...formData, password: text })}
+          value={password}
+          onChangeText={setPassword}
           mode="outlined"
+          secureTextEntry
           style={styles.input}
-          secureTextEntry={!showPassword}
-          error={!!validationErrors.password}
-          right={
-            <TextInput.Icon
-              icon={showPassword ? 'eye-off' : 'eye'}
-              onPress={() => setShowPassword(!showPassword)}
-            />
-          }
+          error={!!errors.password}
         />
-        <HelperText type="error" visible={!!validationErrors.password}>
-          {validationErrors.password}
+        <HelperText type="error" visible={!!errors.password}>
+          {errors.password}
         </HelperText>
 
         <TextInput
-          label="Xác nhận mật khẩu"
-          value={formData.confirmPassword}
-          onChangeText={(text) => setFormData({ ...formData, confirmPassword: text })}
+          label="Nhập lại mật khẩu"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
           mode="outlined"
+          secureTextEntry
           style={styles.input}
-          secureTextEntry={!showPassword}
-          error={!!validationErrors.confirmPassword}
+          error={!!errors.confirmPassword}
         />
-        <HelperText type="error" visible={!!validationErrors.confirmPassword}>
-          {validationErrors.confirmPassword}
+        <HelperText type="error" visible={!!errors.confirmPassword}>
+          {errors.confirmPassword}
         </HelperText>
 
         <Button
           mode="contained"
           onPress={handleRegister}
           style={styles.button}
-          loading={loading}
-          disabled={loading}
         >
           Đăng ký
         </Button>
 
-        <View style={styles.loginContainer}>
-          <Text>Đã có tài khoản? </Text>
-          <Button
-            mode="text"
-            onPress={() => navigation.navigate('Login')}
-            style={styles.loginButton}
-          >
-            Đăng nhập
-          </Button>
-        </View>
+        <Button
+          mode="text"
+          onPress={() => navigation.navigate('Login')}
+          style={styles.button}
+        >
+          Đã có tài khoản? Đăng nhập
+        </Button>
       </View>
-
-      <Snackbar
-        visible={showError}
-        onDismiss={() => setShowError(false)}
-        duration={3000}
-        style={styles.snackbar}
-      >
-        {error}
-      </Snackbar>
     </ScrollView>
   );
 }
@@ -208,45 +162,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFF5F5',
   },
-  header: {
-    alignItems: 'center',
-    marginTop: 60,
-    marginBottom: 40,
-    paddingHorizontal: 20,
+  content: {
+    padding: 20,
+    paddingTop: 50,
   },
   title: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FF9999',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666666',
-  },
-  form: {
-    flex: 1,
-    padding: 20,
+    marginBottom: 24,
+    textAlign: 'center',
   },
   input: {
     marginBottom: 4,
-    backgroundColor: '#FFFFFF',
   },
   button: {
-    marginTop: 24,
-    paddingVertical: 6,
-    backgroundColor: '#FF9999',
-  },
-  loginContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  loginButton: {
-    marginLeft: -8,
-  },
-  snackbar: {
-    backgroundColor: '#FF4444',
+    marginTop: 16,
   },
 }); 
