@@ -1,35 +1,35 @@
-# PlanUs - Ứng dụng lên kế hoạch hẹn hò
+# PlanUs - Dating Plan App
 
-PlanUs là ứng dụng mobile giúp các cặp đôi dễ dàng lên kế hoạch cho buổi hẹn hò của mình. Với giao diện thân thiện và các gợi ý thông minh, PlanUs sẽ giúp bạn có những trải nghiệm hẹn hò tuyệt vời.
+PlanUs is a mobile application that helps couples easily plan their dates. With a user-friendly interface and smart suggestions, PlanUs will help you have amazing dating experiences.
 
-## Tính năng
+## Features
 
-- Gợi ý kế hoạch hẹn hò dựa trên tâm trạng
-- Tùy chỉnh theo khu vực, ngân sách và thời gian
-- Lưu trữ và xem lại lịch sử các kế hoạch
+- Mood-based date plan suggestions
+- Customization based on location, budget, and time
+- Save and review plan history
 
-## Cài đặt
+## Installation
 
-1. Cài đặt các công cụ cần thiết:
-   - Node.js (phiên bản 14 trở lên)
-   - npm hoặc yarn
-   - Expo Go trên điện thoại di động
+1. Install required tools:
+   - Node.js (version 14 or higher)
+   - npm or yarn
+   - Expo Go on your mobile device
 
-2. Clone repository và cài đặt dependencies:
+2. Clone repository and install dependencies:
    ```bash
    git clone <repository-url>
    cd PlanUs
    npm install
    ```
 
-3. Chạy ứng dụng:
+3. Run the application:
    ```bash
    npm start
    ```
 
-4. Quét mã QR bằng ứng dụng Expo Go trên điện thoại để chạy ứng dụng
+4. Scan the QR code with the Expo Go app on your phone to run the application
 
-## Công nghệ sử dụng
+## Technologies Used
 
 - React Native
 - Expo
@@ -37,31 +37,31 @@ PlanUs là ứng dụng mobile giúp các cặp đôi dễ dàng lên kế hoạ
 - React Native Paper
 - AsyncStorage
 
-## Phát triển
+## Development
 
-Dự án sử dụng TypeScript để đảm bảo type safety. Để phát triển:
+The project uses TypeScript to ensure type safety. To develop:
 
-1. Chạy ứng dụng ở chế độ development:
+1. Run the application in development mode:
    ```bash
    npm start
    ```
 
-2. Để build cho Android:
+2. To build for Android:
    ```bash
    npm run android
    ```
 
-3. Để build cho iOS:
+3. To build for iOS:
    ```bash
    npm run ios
    ```
 
-## Cấu trúc thư mục
+## Directory Structure
 
 ```
 src/
-  ├── screens/          # Các màn hình chính
-  ├── components/       # Components có thể tái sử dụng
-  ├── navigation/       # Cấu hình navigation
-  └── utils/           # Các utility functions
+  ├── screens/          # Main screens
+  ├── components/       # Reusable components
+  ├── navigation/       # Navigation configuration
+  └── utils/           # Utility functions
 ```
