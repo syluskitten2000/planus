@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { TextInput, Button, Text, HelperText, Snackbar } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { authService } from '../services/api';
 import * as EmailValidator from 'email-validator';
 
 type RootStackParamList = {
@@ -36,7 +35,8 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
         throw new Error('Email không hợp lệ');
       }
 
-      await authService.forgotPassword(email);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
@@ -112,44 +112,36 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF5F5',
-    padding: 20,
+    padding: 16,
+    backgroundColor: '#fff',
   },
   header: {
-    alignItems: 'center',
-    marginTop: 60,
-    marginBottom: 40,
+    marginBottom: 32,
   },
   title: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FF9999',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666666',
-    textAlign: 'center',
+    color: '#666',
   },
   form: {
     flex: 1,
   },
   input: {
-    marginBottom: 4,
-    backgroundColor: '#FFFFFF',
+    marginBottom: 8,
   },
   button: {
-    marginTop: 24,
-    paddingVertical: 6,
-    backgroundColor: '#FF9999',
+    marginTop: 16,
   },
   successText: {
-    color: '#4CAF50',
     textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 20,
+    marginVertical: 16,
+    color: '#4CAF50',
   },
   snackbar: {
-    backgroundColor: '#FF4444',
+    backgroundColor: '#f44336',
   },
 }); 

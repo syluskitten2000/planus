@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { TextInput, Button, Text, HelperText, Snackbar } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { authService } from '../services/api';
+import { AuthService } from '../services/auth.service';
 import * as EmailValidator from 'email-validator';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,9 +11,12 @@ type RootStackParamList = {
   Register: undefined;
   Welcome: undefined;
   ForgotPassword: undefined;
+  Mood: undefined;
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
+
+const authService = new AuthService();
 
 export default function LoginScreen({ navigation }: Props) {
   const { signIn } = useAuth();
@@ -51,13 +54,13 @@ export default function LoginScreen({ navigation }: Props) {
       }
 
       // Call API
-      const response = await authService.login({ email, password });
+      const user = await authService.login(email, password);
       
       // Save auth data
-      await signIn(response.token, response.user);
+      await signIn('', user);
 
-      // Navigate to Welcome screen
-      navigation.replace('Welcome');
+      // Navigate to Mood screen
+      navigation.replace('Mood');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra');
       setShowError(true);

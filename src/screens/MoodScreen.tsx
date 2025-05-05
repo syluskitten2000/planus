@@ -1,13 +1,15 @@
 import React from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
-import { Button, Card, Text } from 'react-native-paper';
+import { Button, Card, Text, IconButton } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useAuth } from '../contexts/AuthContext';
 
 type RootStackParamList = {
   Mood: undefined;
   Preferences: {
     moodType: string;
   };
+  Profile: undefined;
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Mood'>;
@@ -40,9 +42,19 @@ const moodOptions = [
 ];
 
 export default function MoodScreen({ navigation }: Props) {
+  const { user } = useAuth();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.question}>Bạn muốn hôm nay như thế nào?</Text>
+      <View style={styles.header}>
+        <Text style={styles.question}>Bạn muốn hôm nay như thế nào?</Text>
+        <IconButton
+          icon="account"
+          size={24}
+          onPress={() => navigation.navigate('Profile')}
+          style={styles.profileButton}
+        />
+      </View>
       <ScrollView style={styles.optionsContainer}>
         {moodOptions.map((option) => (
           <Card
@@ -70,12 +82,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF5F5',
     padding: 20,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
   question: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333333',
-    marginBottom: 20,
-    textAlign: 'center',
+    flex: 1,
+  },
+  profileButton: {
+    margin: 0,
   },
   optionsContainer: {
     flex: 1,
@@ -106,6 +126,6 @@ const styles = StyleSheet.create({
   cardDescription: {
     fontSize: 14,
     color: '#666666',
-    marginTop: 5,
+    marginTop: 4,
   },
 }); 
